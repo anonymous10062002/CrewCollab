@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./styles/chat.css">
+  <title>CrewCollab</title>
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="./images&icons/prides.png" alt="logo">
+    </div>
+    <h1>CrewCollab</h1>
+    <button id="logoutBtn">Logout</button>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <div class="workspace-info">
+        <h2>Welcome <span id="uname"></span></h2>
+        <p>Current Room: #<span id="current-room-name">general</span></p>
+        <div class="room-btn">
+          <button onclick="roomCreate()">Create Room</button>
+          <button onclick="roomJoin()">Join Room</button>
+        </div>
+      </div>
+      <div class="room-list">
+        <h3>Rooms Connected:</h3>
+        <ul id="rm-list">
+        </ul>
+      </div>
+      <div class="user-list">
+        <h3>Online users</h3>
+        <ul id="online_ul">
+        </ul>
+      </div>
+    </div>
+    <div class="chat-window">
+      <ul class="messages">
+        <!-- message will be append here -->
+      </ul>
+      <form>
+        <input id="new-msg" type="text" placeholder="Type your message here...">
+        <button id="send-msg">Send</button>
+      </form>
+    </div>
+  </main>
+</body>
+<script src="https://cdn.socket.io/4.6.0/socket.io.min.js"
+  integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+<script src="./scripts/main.js"></script>
+
+<script>
+  let queryString = window.location.search.split("=")
+    let code=queryString[1]
+    const client_id = "ecf89f42afe601c8d613";
+const client_secret = "1e2bdd5424e9abb53f7422c3017c11c66718da13";
+  
+
+  window.addEventListener("load",()=>{
+    if(code.length){
+      gitDetails(code)
+    }
+  })
+   
+
+    
+
+//   let accessToken =  fetch("https://github.com/login/oauth/access_token", {
+//     method: "POST",
+//     headers: {
+//       Accept: "application/json",
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//       client_id: client_id,
+//       client_secret: client_secret,
+//       code,
+//     }),
+//   })
+//   .then((res) => res.json());
+ 
+// console.log(accessToken)
+
+//   //access token
+//   const access_token = accessToken.access_token;
+// console.log(access_token)
+    
+//   step2(code,client_id,client_secret)
+
+  let gitDetails = async (code) => {
+    try {
+      let res = await fetch(`http://localhost:4040/users/auth/github?code=${code}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+       
+      });
+
+      let obj = await res.json();
+      console.log(obj);
+      localStorage.setItem("user",obj.email);
+      sign_fun(obj ,code)
+      
+      // alert(data.ms);
+      //set token
+      // localStorage.setItem("token", data.token);
+      // localStorage.setItem("refreshtoken", data.refreshtoken);
+    } catch (error) {
+      console.log(error);
+      alert("error");
+    }
+  };
+  // 
+
+
+  //sign up
+ 
+
+let sign_fun = async (obj) => {
+    // console.log(obj)
+    let newobj = {
+    "name" : obj.name,
+    "email" : obj.email,
+    "password" : obj.password
+  }
+    try {
+      let res = await fetch("http://localhost:4040/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newobj),
+      })
+      // if(res) {
+        let data = await res.json();
+        console.log(data);
+        // console.log(data.newuser)
+        if(data.msg==="User Registered"){
+          login_fun(data.newuser,obj.password)
+          alert(data.msg);
+        }else{
+          login_Details(obj)
+        }
+   
+
+      
+       
+      // }
+    } catch (error) {
+      console.log(error);
+      alert("error");
+    }
+  };
+
+
+//login
+
+
+
+let login_fun = async (obj,pass) => {
+  let newobj = {
+    "email" : obj.email,
+    "password" : pass
+  }
+  // console.log(newobj)
+    try {
+      let res = await fetch("http://localhost:4040/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newobj),
+      });
+
+      let data = await res.json();
+      console.log(data);
+      alert(data.msg);
+      //set token
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshtoken", data.refreshtoken);
+    } catch (error) {
+      console.log(error);
+      alert("error");
+    }
+  };
+  
+  //new login function
+
+  // let login_Details = async (code) => {
+  //   try {
+  //     let res = await fetch(`http://localhost:4040/users/auth/github?code=${code}`, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+       
+  //     });
+
+  //     let obj = await res.json();
+  //     console.log(obj);
+  //     console.log("tarun")
+  //     // sign_fun(obj)
+  //     login_newfun(obj.email,obj.password)
+  //     // alert(data.ms);
+  //     //set token
+  //     // localStorage.setItem("token", data.token);
+  //     // localStorage.setItem("refreshtoken", data.refreshtoken);
+  //   } catch (error) {
+  //     console.log(error);
+  //     alert("error");
+  //   }
+  // };
+
+
+
+
+  
+  let login_Details = async (obj) => {
+  let newobj = {
+    "email" : obj.email,
+    "password" : obj.password
+  }
+  console.log(newobj)
+    try {
+      let res = await fetch("http://localhost:4040/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newobj),
+      });
+
+      let data = await res.json();
+      console.log(data);
+      alert(data.msg);
+      //set token
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshtoken", data.refreshtoken);
+    } catch (error) {
+      console.log(error);
+      alert("error");
+    }
+  };
+  
+</script>
+
+</html>
